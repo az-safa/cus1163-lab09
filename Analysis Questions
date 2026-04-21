@@ -1,0 +1,30 @@
+Belady's Anomaly: In Test Case 2, why does adding a 4th frame cause MORE page faults than having only 3 frames? This seems counterintuitive.
+      FIFO rigidly evicts the oldest page, regardless of how soon that page will be needed again. In specific access patterns like Test Case
+      2, having 3 frames cycles the pages out at a rhythm that accidentally keeps upcoming pages in memory. When you increase the capacity to 
+      4 frames, the internal timeline changes. The system keeps older pages around slightly longer, which pushes the eviction of a currently 
+      needed page into the exact moment the program needs to access it again, resulting in more page faults.
+Data Structures: Why do we need both a Queue AND a Set? What would happen if we only used a Queue?
+      We use the Queue to maintain the chronological order of pages (First-In, First-Out), so we know exactly which page is the oldest and needs
+      to be evicted. We use the Set to provide constant-time $O(1)$ lookups to quickly check if a page is currently in memory.
+      If we only used a Queue, every time a page is requested, we would have to iterate through the entire queue to check if the page exists. 
+      This would change the lookup time to $O(N)$ where N is the number of frames, slowing down the algorithm significantly for large memory sizes.
+Performance: If memory access takes 200 nanoseconds and a page fault takes 8 milliseconds, calculate the effective access time for Test Case 1 with 3 frames. (Use the formula from the lesson)
+      Memory access time = 200 ns
+      Page fault time = 8 milliseconds = 8,000,000 ns
+      Test Case 1 (3 frames) Fault Rate ($p$) = 75.0% = 0.75
+      Test Case 1 (3 frames) Hit Rate = 25.0% = 0.25
+      Formula: Effective Access Time (EAT) = (Hit Rate * Memory Access Time) + (Fault Rate * Page Fault Time)
+      EAT = (0.25 * 200 ns) + (0.75 * 8,000,000 ns)
+      EAT = 50 ns + 6,000,000 ns
+      Effective Access Time = 6,000,050 ns (or ~6 ms)
+Pattern Analysis: Which test case had the worst performance with 3 frames? Why did that particular access pattern cause so many page faults?
+      Test Case 3 (Looping Pattern: [1, 2, 3, 4, 1, 2...]) had the worst performance with a 100% fault rate. This happens because the program 
+      cycles through 4 distinct pages continuously, but only has 3 frames available. By the time the program loops back to request page 1, 
+      page 1 has just been evicted to make room for page 4. This constant cycle of evicting the exact page that will be needed next is a 
+      worst-case scenario known as "thrashing."
+Real World: Based on your observations, why do you think modern operating systems don't use pure FIFO for page replacement?
+      Modern operating systems avoid pure FIFO because it completely ignores the principle of locality—how recently or frequently a page is 
+      being used. FIFO might aggressively kick out a heavily used variable or core library simply because it was loaded into memory first. 
+      Coupled with the fact that adding physical memory can inexplicably degrade performance (Belady's Anomaly), pure FIFO is too inefficient. 
+      Modern systems use more intelligent algorithms like Least Recently Used (LRU) or Clock (Second-Chance) algorithms, which make eviction 
+      decisions based on actual page usage.
